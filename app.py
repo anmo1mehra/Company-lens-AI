@@ -181,6 +181,17 @@ if "discord_res" not in st.session_state:
 if "preset_prompt" not in st.session_state:
     st.session_state.preset_prompt = ""
 
+# Helper to resolve secret from env or st.secrets
+def get_secret(key_name: str) -> str:
+    val = os.getenv(key_name, "")
+    if not val:
+        try:
+            if hasattr(st, "secrets") and key_name in st.secrets:
+                val = str(st.secrets[key_name])
+        except Exception:
+            pass
+    return val.strip()
+
 with st.sidebar:
     st.markdown('<div class="sidebar-brand">🔷 Relu Consultancy</div>', unsafe_allow_html=True)
     st.markdown('<div class="sidebar-subbrand">COMPANY INTELLIGENCE</div>', unsafe_allow_html=True)
@@ -197,8 +208,8 @@ with st.sidebar:
     tab_api, tab_discord = st.tabs(["API", "DISCORD"])
     
     with tab_api:
-        env_openrouter = os.getenv("OPENROUTER_API_KEY", "")
-        env_serper = os.getenv("SERPER_API_KEY", "")
+        env_openrouter = get_secret("OPENROUTER_API_KEY")
+        env_serper = get_secret("SERPER_API_KEY")
         
         openrouter_key = st.text_input("OPENROUTER API KEY", value=env_openrouter, type="password")
         serper_key = st.text_input("SERPER.DEV API KEY", value=env_serper, type="password")
@@ -214,12 +225,12 @@ with st.sidebar:
 
     with tab_discord:
         st.caption("After research completes, the report auto-sends to your configured channel.")
-        discord_token = st.text_input("BOT TOKEN", value=os.getenv("DISCORD_BOT_TOKEN", ""), type="password")
-        discord_channel = st.text_input("CHANNEL ID", value=os.getenv("DISCORD_CHANNEL_ID", ""))
+        discord_token = st.text_input("BOT TOKEN", value=get_secret("DISCORD_BOT_TOKEN"), type="password")
+        discord_channel = st.text_input("CHANNEL ID", value=get_secret("DISCORD_CHANNEL_ID"))
         
         st.markdown("**APPLICANT DETAILS**")
-        applicant_name = st.text_input("Full Name", value=os.getenv("APPLICANT_NAME", "ANMOL MEHRA"))
-        applicant_email = st.text_input("Email Address", value=os.getenv("APPLICANT_EMAIL", ""))
+        applicant_name = st.text_input("Full Name", value=get_secret("APPLICANT_NAME") or "ANMOL MEHRA")
+        applicant_email = st.text_input("Email Address", value=get_secret("APPLICANT_EMAIL"))
         
         if st.button("Save Discord Config", use_container_width=True):
             st.success("Saved ✓")
